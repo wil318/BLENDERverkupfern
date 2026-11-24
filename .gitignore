@@ -1,0 +1,9 @@
+# Nur lokal (nicht hochladen): Unterrichtsmaterial, Einzelbilder, Sicherungen
+Chemie-Modul-Elektrochemie*/
+video/frames*/
+video/test*.jpg
+video/*.log
+*.blend1
+.claude/
+.DS_Store
+__pycache__/

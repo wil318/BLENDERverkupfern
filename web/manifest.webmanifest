@@ -1,0 +1,23 @@
+{
+  "name": "Verkupfern von Eisen – 3D-Modell",
+  "short_name": "Verkupfern 3D",
+  "description": "Interaktives 3D-Modell zum Verkupfern von Eisen: Versuch und Teilchenebene.",
+  "lang": "de",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#060c18",
+  "theme_color": "#060c18",
+  "categories": ["education"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "img/render.jpg", "sizes": "1600x1000", "type": "image/jpeg", "form_factor": "wide", "label": "Verkupfern" }
+  ]
+}

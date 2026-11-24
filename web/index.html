@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <!-- Import-Map muss vor jedem modulepreload/Modul stehen, sonst ignoriert Firefox sie -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+      }
+    }
+  </script>
+  <title>Verkupfern von Eisen · 3D-Modell</title>
+  <meta name="description" content="Interaktives 3D-Modell zum Verkupfern von Eisen: Versuchsaufbau und Teilchenebene, mit und ohne Strom – in Blender modelliert, im Browser erkundbar." />
+  <meta name="theme-color" content="#060c18" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Verkupfern 3D" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <meta property="og:title" content="Verkupfern von Eisen – interaktives 3D-Modell" />
+  <meta property="og:image" content="img/render.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="src/style.css" />
+  <link rel="modulepreload" href="src/content.js" />
+  <link rel="preload" href="models/verkupfern.glb" as="fetch" crossorigin />
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene" aria-label="3D-Ansicht: Verkupfern von Eisen"></canvas>
+    <div class="vignette"></div>
+    <div class="grain"></div>
+
+    <div id="hotspots" aria-live="off"></div>
+    <div id="hoverTip" role="tooltip"></div>
+
+    <header class="brand">
+      <a class="logo" href="./" aria-label="Neu laden"><img src="lmg-tech-logo.png" alt="LMG TECH" width="72" height="72" /></a>
+      <div class="titles">
+        <div class="eyebrow" id="eyebrow">Elektrochemie · Klasse 9</div>
+        <h1>Verkupfern von <em>Eisen</em></h1>
+        <p>Versuch und Teilchenebene in 3D</p>
+      </div>
+    </header>
+
+    <nav class="index" id="index" aria-label="Teile und Teilchen">
+      <button class="index-toggle" id="indexToggle" aria-expanded="true">
+        <span>Teile &amp; Teilchen</span><span class="count" id="partCount"></span><svg viewBox="0 0 12 12" width="12" height="12"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      </button>
+      <ol id="partList"></ol>
+    </nav>
+
+    <!-- Ablauf: mit Strom / ohne Strom / falsch gepolt, Zähler -->
+    <section class="proc" id="proc" aria-label="Ablauf steuern">
+      <div class="proc-top"><span>Ablauf</span><b id="procName">Mit Strom</b></div>
+      <div class="proc-btns scen">
+        <button class="pbtn" data-scen="A" title="Nagel am Minuspol, Kupferblech am Pluspol">Mit Strom</button>
+        <button class="pbtn" data-scen="B" title="Nagel ohne Batterie in der Lösung (A3)">Ohne Strom</button>
+        <button class="pbtn" data-scen="C" title="Batterie falsch herum angeschlossen">Falsch gepolt</button>
+      </div>
+      <div class="ptrack"><i id="procBar"></i></div>
+      <div class="proc-btns">
+        <button class="pbtn" id="btnRun" title="Ablauf starten/anhalten">▶ Start</button>
+        <button class="pbtn ghost" id="btnReset" aria-label="Von vorn" title="Von vorn">↺</button>
+        <button class="pbtn ghost" id="btnFast" aria-label="Zeitraffer" title="Zeitraffer">»</button>
+      </div>
+      <dl class="count" id="count">
+        <dt>Cu²⁺ in Lösung</dt><dd id="cCu2">6</dd>
+        <dt>Fe²⁺ in Lösung</dt><dd id="cFe2">0</dd>
+        <dt class="full">Cu abgeschieden</dt><dd class="full" id="cDep">0</dd>
+        <dt class="full">Cu abgelöst</dt><dd class="full" id="cDis">0</dd>
+      </dl>
+    </section>
+
+    <aside id="info" class="info" aria-hidden="true">
+      <button class="close" id="infoClose" aria-label="Schließen">×</button>
+      <div class="info-kicker"><span class="swatch"></span><span id="infoKicker"></span></div>
+      <h2 id="infoTitle"></h2>
+      <p id="infoText"></p>
+      <dl id="infoFacts"></dl>
+      <div class="info-actions">
+        <button class="btn" id="infoFocus">Heranzoomen</button>
+                <button class="btn ghost" id="infoPrev" aria-label="Vorheriges Bauteil">←</button>
+        <button class="btn ghost" id="infoNext" aria-label="Nächstes Bauteil">→</button>
+      </div>
+    </aside>
+
+    <div class="zoom" aria-label="Zoom">
+      <button id="zoomIn" aria-label="Hineinzoomen">+</button>
+      <input id="zoomSlider" type="range" min="0" max="1000" value="500" orient="vertical" aria-label="Zoomstufe" />
+      <button id="zoomOut" aria-label="Herauszoomen">−</button>
+    </div>
+
+    <section class="phase" id="phase" aria-live="polite">
+      <div class="phase-top">
+        <span class="phase-no" id="phaseNo">01</span><span class="phase-step" id="phaseStep">Aufbau</span>
+        <span class="phase-nav"><button id="phasePrev" aria-label="Vorherige Station">‹</button><button id="phaseNext" aria-label="Nächste Station">›</button></span>
+      </div>
+      <h3 id="phaseTitle">Verkupfern von Eisen</h3>
+      <p id="phaseText"></p>
+      <div class="reveal" id="reveal"></div>
+      <div class="phase-track" id="phaseTrack"></div>
+    </section>
+
+    <footer class="controls">
+      <button class="play paused" id="play" aria-label="Rundgang abspielen">
+        <svg class="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        <svg class="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></svg>
+      </button>
+      <div class="timeline">
+        <input id="scrub" type="range" min="0" max="8999" value="0" step="1" aria-label="Rundgang" />
+        <div class="ticks" id="ticks"></div>
+      </div>
+      <div class="chips">
+        <button class="chip case" id="worldBtn" aria-pressed="false" title="Zwischen Versuch und Teilchenebene wechseln (T)">Teilchen</button>
+        <button class="chip on" id="so4" aria-pressed="true" title="Sulfat-Ionen ein/aus">SO₄²⁻</button>
+        <button class="chip on" id="bubbles" aria-pressed="true" title="Gasbläschen am Nagel ein/aus">Bläschen</button>
+        <button class="chip sol" id="arrows" aria-pressed="false" title="Pfeile für e⁻ und Cu²⁺ (P)">Pfeile</button>
+        <button class="chip sol" id="eqs" aria-pressed="false" title="Gleichungen an den Elektroden (G)">Gleichungen</button>
+        <button class="chip on" id="labels" aria-pressed="true" title="Beschriftungen ein/aus">Labels</button>
+        <button class="chip" id="reset" title="Ansicht zurücksetzen">Ansicht</button>
+      </div>
+    </footer>
+
+    <div id="loader">
+      <div class="loader-inner">
+        <img src="lmg-tech-logo.png" alt="LMG TECH" width="64" height="64" />
+        <div class="loader-title">Lade Versuch</div>
+        <div class="loader-bar"><i id="loadBar"></i></div>
+        <div class="loader-pct" id="loadPct">0 %</div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
