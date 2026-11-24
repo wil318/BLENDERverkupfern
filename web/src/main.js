@@ -133,7 +133,7 @@ loader.load('models/verkupfern.glb', async (gltf) => {
   $('loader').classList.add('done');
 }, (e) => {
   if (e.total) {
-    const p = Math.round((e.loaded / e.total) * 100);
+    const p = Math.min(100, Math.round((e.loaded / e.total) * 100));
     $('loadBar').style.width = p + '%';
     $('loadPct').textContent = p + ' %';
   }
