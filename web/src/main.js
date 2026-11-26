@@ -762,9 +762,20 @@ function tick() {
     updateTags();
     if (!state.sliderActive) $('zoomSlider').value = String(Math.round(distToSlider(currentDist())));
     if (frame % 6 === 0) updateReadout();
+    if (frame % 10 === 0) fitIndex();
   }
   composer.render();
   requestAnimationFrame(tick);
+}
+
+// Bauteil-Liste endet immer über der Stationskarte (deren Höhe hängt von Text und Gleichungen ab); der Rest scrollt
+function fitIndex() {
+  const ol = $('partList');
+  if ($('index').classList.contains('collapsed') || !ol.offsetParent) return;
+  const top = ol.getBoundingClientRect().top;
+  const limit = $('phase').getBoundingClientRect().top - 16;
+  const h = Math.max(48, Math.floor(limit - top - 8));
+  if (ol.style.maxHeight !== h + 'px') ol.style.maxHeight = h + 'px';
 }
 
 function updateReadout() {
@@ -832,7 +843,7 @@ addEventListener('resize', () => {
 });
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 requestAnimationFrame(tick);
-window.__kupfer = { state, proc, goToStep, setScenario, counts, nodes };
+window.__kupfer = { state, proc, goToStep, setScenario, counts, nodes, fitIndex };
 
 if ('serviceWorker' in navigator) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
